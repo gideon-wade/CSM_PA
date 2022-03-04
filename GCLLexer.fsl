@@ -12,6 +12,7 @@ System.Globalization.CultureInfo.CurrentCulture <- new System.Globalization.Cult
 // We define macros for some regular expressions we will use later
 let digit       = ['0'-'9']
 let num         = digit+ ( '.' digit+)?  ('E' ('+'|'-')? digit+ )?
+let variable    = ['a'-'z''A'-'Z']['a'-'z''A'-'Z''0'-'9']*
 let whitespace  = [' ' '\t']
 let newline     = "\n\r" | '\n' | '\r'
 
@@ -25,11 +26,14 @@ rule tokenize = parse
 | newline       { lexbuf.EndPos <- lexbuf.EndPos.NextLine; tokenize lexbuf; }
 // deal with tokens that need to be built
 | num           { NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) }
+| variable      { VARIABLE(LexBuffer<_>.LexemeString lexbuf) }
 | '*'           { TIMES }
 | '/'           { DIV }
 | '+'           { PLUS }
 | '-'           { MINUS }
 | '^'           { POW }
+| ';'           { SEMICOLON }
 | '('           { LPAR }
 | ')'           { RPAR }
+| ":="          { ASSIGN }
 | eof           { EOF }
