@@ -1,0 +1,1 @@
+fsyacc.exe GCLParser.fsp --module GCLParser
