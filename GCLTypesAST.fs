@@ -15,6 +15,7 @@ type expr =
   | UMinusExpr of (expr)
   
 type cmd =
+  | Skip
   | Assign of (string * expr)
   | Cmds of (cmd * cmd)  //semicolon
 

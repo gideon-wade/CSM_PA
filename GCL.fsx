@@ -27,12 +27,12 @@ let rec eval e (mem : Map<string, float>) =
     | UMinusExpr(x) -> - (eval x mem)
 
 let rec evalCmd cmd (mem : Map<string, float>) =
-    match cmd with
+    match cmd with  
+        | Skip -> mem 
         | Assign(x, a) -> mem.Add(x, (eval a mem))
         | Cmds(c1, c2) -> evalCmd c2 (evalCmd c1 mem);;
 
 
-    
 // We He
 let parse input =
     // translate string into a buffer of characters
@@ -58,4 +58,4 @@ let rec compute n =
         with e -> compute (n-1)
 
 // Start interacting with the user
-compute 3
+compute 20
