@@ -1,0 +1,4 @@
+.vs/
+GCLLexer.fs
+GCLParser.fs
+GCLParser.fsi
