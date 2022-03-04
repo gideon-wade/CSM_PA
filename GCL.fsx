@@ -1,7 +1,7 @@
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/latit/.nuget/packages/fslexyacc.runtime/10.0.0/lib/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/giddi/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "GCLTypesAST.fs"

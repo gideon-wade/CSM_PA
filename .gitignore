@@ -1,4 +1,5 @@
 .vs/
+.idea/
 GCLLexer.fs
 GCLParser.fs
 GCLParser.fsi
