@@ -17,6 +17,7 @@ open GCLLexer
 let rec eval e (mem : Map<string, float>) =
   match e with
     | Num(x) -> x
+    | ArrayVariable(x, a) -> mem.[x+"["+(sprintf "%i" ((int) (eval a mem)))+"]"]
     | Variable(x) -> mem.[x]
     | TimesExpr(x,y) -> (eval x mem) * (eval y mem)
     | DivExpr(x,y) -> (eval x mem) / (eval y mem)
@@ -26,10 +27,11 @@ let rec eval e (mem : Map<string, float>) =
     | UPlusExpr(x) -> (eval x mem)
     | UMinusExpr(x) -> - (eval x mem)
 
-let rec evalCmd cmd (mem : Map<string, float>) =
+let rec evalCmd (cmd:cmd) (mem : Map<string, float>) =
     match cmd with  
-        | Skip -> mem 
+        | Skip -> mem
         | Assign(x, a) -> mem.Add(x, (eval a mem))
+        | AssignArray(x, a1, a2) -> mem.Add(x+"["+(sprintf "%i" ((int) (eval a1 mem)))+"]", (eval a2 mem))
         | Cmds(c1, c2) -> evalCmd c2 (evalCmd c1 mem);;
 
 

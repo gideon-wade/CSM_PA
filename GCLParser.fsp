@@ -6,7 +6,7 @@ open GCLTypesAST
 // Declare the tokens (terminal symbols)
 %token <float> NUM
 %token <String> VARIABLE
-%token ASSIGN SEMICOLON SKIP
+%token ASSIGN SEMICOLON SKIP LSPAR RSPAR
 %token TIMES DIV PLUS MINUS POW LPAR RPAR EOF 
 // NOTE: the actual formats of these tokens are defined in the lexer file
 //       as regular expressions
@@ -16,7 +16,7 @@ open GCLTypesAST
 %left ASSIGN SKIP
 %right SEMICOLON
 %left PLUS MINUS
-%left TIMES DIV
+%left TIMES DIV 
 %right POW
 
 // We declare the initial non-terminal symbol
@@ -58,16 +58,17 @@ expression:
   | MINUS expression              { UMinusExpr($2) }
   | NUM                           { Num($1) }
   | VARIABLE                      { Variable($1) }
+  | VARIABLE LSPAR expression RSPAR { ArrayVariable($1, $3) }
   | LPAR expression RPAR          { $2 }
 
 
 // C ::= x := a | A[a] := a | skip | C ; C | if GC fi | do GC od
 command:
-  | VARIABLE ASSIGN expression {Assign($1,$3)}
+  | VARIABLE ASSIGN expression {Assign($1, $3)}
+  | VARIABLE LSPAR expression RSPAR ASSIGN expression {AssignArray($1, $3, $6)}
   | command SEMICOLON command  {Cmds($1, $3)}
-  | SKIP                       {Skip($0)}
+  | SKIP                       {Skip}
 
-  
   
 // Again, the code annotation specifies the result of parsing
 // For example { TimesExpr($1,$3) } specifies that parsing with the production

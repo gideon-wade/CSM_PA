@@ -26,6 +26,7 @@ rule tokenize = parse
 | newline       { lexbuf.EndPos <- lexbuf.EndPos.NextLine; tokenize lexbuf; }
 // deal with tokens that need to be built
 | num           { NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) }
+| "skip"        { SKIP }
 | variable      { VARIABLE(LexBuffer<_>.LexemeString lexbuf) }
 | '*'           { TIMES }
 | '/'           { DIV }
@@ -35,6 +36,7 @@ rule tokenize = parse
 | ';'           { SEMICOLON }
 | '('           { LPAR }
 | ')'           { RPAR }
+| '['           { LSPAR }
+| ']'           { RSPAR }
 | ":="          { ASSIGN }
-| "skip"        { SKIP }
 | eof           { EOF }

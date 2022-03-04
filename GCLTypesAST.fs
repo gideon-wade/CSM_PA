@@ -5,6 +5,7 @@ module GCLTypesAST
 
 type expr =
   | Num of float
+  | ArrayVariable of string * expr
   | Variable of string
   | TimesExpr of (expr * expr)
   | DivExpr of (expr * expr)
@@ -17,5 +18,6 @@ type expr =
 type cmd =
   | Skip
   | Assign of (string * expr)
+  | AssignArray of (string * expr * expr)
   | Cmds of (cmd * cmd)  //semicolon
 
