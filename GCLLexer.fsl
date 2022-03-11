@@ -27,6 +27,21 @@ rule tokenize = parse
 // deal with tokens that need to be built
 | num           { NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) }
 | "skip"        { SKIP }
+| "if"          { IF }
+| "fi"          { FI }
+| "do"		    { DO }
+| "od"          { OD }
+| "->"          { ARROW }
+| "true"        { TRUE }
+| "false"       { FALSE }
+| "not"         { NOT }
+| "[]"          { GCSEP }
+| '<'           { LT }
+| '>'           { GT }
+| '='           { EQ }
+| '!'           { NOT }
+| '|'           { OR }
+| '&'           { AND }
 | variable      { VARIABLE(LexBuffer<_>.LexemeString lexbuf) }
 | '*'           { TIMES }
 | '/'           { DIV }

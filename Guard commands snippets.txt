@@ -1,0 +1,49 @@
+
+
+#tests for program flow TODO
+
+do true -> if false -> skip fi od 
+
+a:=2; do true -> a:=a*a od
+
+if false -> a:=2[]true -> a:=3 fi
+a:= 10;b:=2; do a>0 -> a:=a-1;b:=b*2 od
+
+# assginments  
+a:= 2; if a>1 -> a:=-1 fi;
+b:= 1; if b<2 -> b:=-1 fi;
+c:= 2; if c=2 -> c:=-1 fi;
+d:= 2; if d<=2 -> d:=-1 fi;
+e:= 4; if e>=3 -> e:=-1 fi;
+f:= 4; if f!=1 -> f:=-1 fi
+
+# lor predcate
+a:= 4; if false | true -> a:=-1 fi;
+b:= 4; if true | false -> b:=-1 fi;
+c:= -1; if false | false -> c:=4 fi;
+d:= 4; if true | true -> d:=-1 fi
+
+# or predcate
+a:= 4; if false || true -> a:=-1 fi;
+b:= 4; if true || false -> b:=-1 fi;
+c:= -1; if false || false -> c:=4 fi;
+d:= 4; if true || true -> d:=-1 fi
+
+# and precates
+a:= -1; if false && true -> a:=4 fi;
+b:= -1; if true && false -> b:=123 fi;
+c:= -1; if false && false -> c:=4 fi;
+d:= 4; if true && true -> d:=-1 fi
+
+# land precates
+a:= -1; if false & true -> a:=4 fi;
+b:= -1; if true & false -> b:=4 fi;
+c:= -1; if false & false -> c:=4 fi;
+d:= 4; if true & true -> d:=-1 fi
+
+# not test
+a:= 4; if not false & true -> a:=-1 fi;
+b:= 4; if true & not false -> b:=-1 fi;
+c:= 4; if not (false & false) -> c:=-1 fi;
+d:= 4; if not (not (true & true)) -> d:=-1 fi
+

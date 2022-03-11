@@ -6,7 +6,8 @@ open GCLTypesAST
 // Declare the tokens (terminal symbols)
 %token <float> NUM
 %token <String> VARIABLE
-%token ASSIGN SEMICOLON SKIP LSPAR RSPAR
+%token TRUE FALSE LT GT EQ OR AND NOT
+%token ASSIGN SEMICOLON SKIP LSPAR RSPAR IF FI DO OD ARROW GCSEP
 %token TIMES DIV PLUS MINUS POW LPAR RPAR EOF 
 // NOTE: the actual formats of these tokens are defined in the lexer file
 //       as regular expressions
@@ -14,7 +15,10 @@ open GCLTypesAST
 // Specify precedence and associativity of operators
 // Precedence is given by the order (from low to high)
 %left ASSIGN SKIP
-%right SEMICOLON
+%right SEMICOLON GCSEP
+%left OR
+%left AND
+%left NOT
 %left PLUS MINUS
 %left TIMES DIV 
 %right POW
@@ -24,8 +28,10 @@ open GCLTypesAST
 
 // We specify the return type of each of then non-terminal symbols
 %type <cmd> start
-%type <expr> expression
+%type <aExpr> aExpression
+%type <bExpr> bExpression
 %type <cmd> command
+%type <gCmd> gCommand
 
 // Grammar productions
 %%
@@ -34,13 +40,7 @@ open GCLTypesAST
 // start -> expression
 // here written:
 start: command EOF             { $1 }
-  
-// GC ::= b -> C | GC [] GC
-// a ::= n | x | A[a] | a + a | a - a | a * a | a / a | - a | a ^ a | (a)
-// b ::= true | false | b & b | b | b | b && b | b || b | !b
-// | a = a | a != a | a > a | a >= a | a < a | a <= a | (b)
-
-
+ 
 // Note that we need to insert an End-Of-File (EOF)
 // The code annotation { $1 } specifies that parsing with this production
 // returns whatever parsing the expression returns: $1 is the result of parsing
@@ -48,27 +48,52 @@ start: command EOF             { $1 }
 
 // The productions for expressions are like in the grammar we saw in class
 // written in the yacc format:
-expression:
-  | expression TIMES expression   { TimesExpr($1,$3) }
-  | expression DIV expression     { DivExpr($1,$3) }
-  | expression PLUS expression    { PlusExpr($1,$3) }
-  | expression MINUS expression   { MinusExpr($1,$3) }
-  | expression POW expression     { PowExpr($1,$3) }
-  | PLUS expression               { UPlusExpr($2) }
-  | MINUS expression              { UMinusExpr($2) }
+
+// a ::= n | x | A[a] | a + a | a - a | a * a | a / a | - a | a ^ a | (a)
+aExpression:
+  | aExpression TIMES aExpression   { TimesExpr($1,$3) }
+  | aExpression DIV aExpression     { DivExpr($1,$3) }
+  | aExpression PLUS aExpression    { PlusExpr($1,$3) }
+  | aExpression MINUS aExpression   { MinusExpr($1,$3) }
+  | aExpression POW aExpression     { PowExpr($1,$3) }
+  | PLUS aExpression               { UPlusExpr($2) }
+  | MINUS aExpression              { UMinusExpr($2) }
   | NUM                           { Num($1) }
   | VARIABLE                      { Variable($1) }
-  | VARIABLE LSPAR expression RSPAR { ArrayVariable($1, $3) }
-  | LPAR expression RPAR          { $2 }
+  | VARIABLE LSPAR aExpression RSPAR { ArrayVariable($1, $3) }
+  | LPAR aExpression RPAR          { $2 }
 
+// b ::= true | false | b & b | b | b | b && b | b || b | !b
+// | a = a | a != a | a > a | a >= a | a < a | a <= a | (b)
+bExpression:
+  | TRUE                            {True}
+  | FALSE                           {False}
+  | bExpression AND bExpression     {LAnd($1, $3)}
+  | bExpression OR bExpression      {LOr($1, $3)}
+  | bExpression AND AND bExpression {And($1, $4)}
+  | bExpression OR OR bExpression   {Or($1, $4)}
+  | NOT bExpression                 {Not($2)}
+  | aExpression EQ aExpression      {Equals($1, $3)}
+  | aExpression NOT EQ aExpression  {NotEquals($1, $4)}
+  | aExpression GT aExpression      {GrtThan($1, $3)}
+  | aExpression GT EQ aExpression   {GrtEq($1, $4)}
+  | aExpression LT aExpression      {LeThan($1, $3)}
+  | aExpression LT EQ aExpression   {LeEq($1, $4)}
+  | LPAR bExpression RPAR           {$2}
 
 // C ::= x := a | A[a] := a | skip | C ; C | if GC fi | do GC od
 command:
-  | VARIABLE ASSIGN expression {Assign($1, $3)}
-  | VARIABLE LSPAR expression RSPAR ASSIGN expression {AssignArray($1, $3, $6)}
+  | VARIABLE ASSIGN aExpression {Assign($1, $3)}
+  | VARIABLE LSPAR aExpression RSPAR ASSIGN aExpression {AssignArray($1, $3, $6)}
   | command SEMICOLON command  {Cmds($1, $3)}
+  | IF gCommand FI             {If($2)}
+  | DO gCommand OD             {Do($2)}
   | SKIP                       {Skip}
-
+  
+// GC ::= b -> C | GC [] GC
+gCommand:
+  | bExpression ARROW command     {Statement($1, $3)}
+  | gCommand GCSEP gCommand {GCmds($1, $3)}
   
 // Again, the code annotation specifies the result of parsing
 // For example { TimesExpr($1,$3) } specifies that parsing with the production
