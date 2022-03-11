@@ -1,14 +1,5 @@
 
 
-#tests for program flow TODO
-
-do true -> if false -> skip fi od 
-
-a:=2; do true -> a:=a*a od
-
-if false -> a:=2[]true -> a:=3 fi
-a:= 10;b:=2; do a>0 -> a:=a-1;b:=b*2 od
-
 # assginments  
 a:= 2; if a>1 -> a:=-1 fi;
 b:= 1; if b<2 -> b:=-1 fi;
@@ -42,8 +33,18 @@ c:= -1; if false & false -> c:=4 fi;
 d:= 4; if true & true -> d:=-1 fi
 
 # not test
-a:= 4; if not false & true -> a:=-1 fi;
-b:= 4; if true & not false -> b:=-1 fi;
-c:= 4; if not (false & false) -> c:=-1 fi;
-d:= 4; if not (not (true & true)) -> d:=-1 fi
+a:= 4; if ! false & true -> a:=-1 fi;
+b:= 4; if true & ! false -> b:=-1 fi;
+c:= 4; if ! (false & false) -> c:=-1 fi;
+d:= 4; if ! (! (true & true)) -> d:=-1 fi
+
+# array tests
+a[1]:=2; a[1]:=a[1]-3;
+b[1]:=a[1]
+
+# 
+c[-1]:= -123
+
+#
+c[-1.3]
 

@@ -34,7 +34,6 @@ rule tokenize = parse
 | "->"          { ARROW }
 | "true"        { TRUE }
 | "false"       { FALSE }
-| "not"         { NOT }
 | "[]"          { GCSEP }
 | '<'           { LT }
 | '>'           { GT }

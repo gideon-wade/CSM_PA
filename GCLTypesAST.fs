@@ -35,7 +35,7 @@ type cmd =
   | Skip
   | Assign of (string * aExpr)
   | AssignArray of (string * aExpr * aExpr)
-  | Cmds of (cmd * cmd)  //semicolon
+  | Cmds of (cmd * cmd)
   | If of gCmd
   | Do of gCmd
 and gCmd =
