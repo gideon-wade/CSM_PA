@@ -5,3 +5,4 @@ GCLLexer.fs
 GCLParser.fs
 GCLParser.fsi
 import.fsx
+.fake

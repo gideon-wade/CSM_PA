@@ -33,6 +33,7 @@ type bExpr =
   
 type cmd =
   | Skip
+  | BoolCmd of bExpr
   | Assign of (string * aExpr)
   | AssignArray of (string * aExpr * aExpr)
   | Cmds of (cmd * cmd)

@@ -1,4 +1,5 @@
-
+# program graph test
+y := 1; do x > 0 -> y := x * y; x := x - 1 od
 
 # assginments  
 a:= 2; if a>1 -> a:=-1 fi;
@@ -8,25 +9,25 @@ d:= 2; if d<=2 -> d:=-1 fi;
 e:= 4; if e>=3 -> e:=-1 fi;
 f:= 4; if f!=1 -> f:=-1 fi
 
-# lor predcate
+# lor predicate 
 a:= 4; if false | true -> a:=-1 fi;
 b:= 4; if true | false -> b:=-1 fi;
 c:= -1; if false | false -> c:=4 fi;
 d:= 4; if true | true -> d:=-1 fi
 
-# or predcate
+# or predicate
 a:= 4; if false || true -> a:=-1 fi;
 b:= 4; if true || false -> b:=-1 fi;
 c:= -1; if false || false -> c:=4 fi;
 d:= 4; if true || true -> d:=-1 fi
 
-# and precates
+# and predicates
 a:= -1; if false && true -> a:=4 fi;
 b:= -1; if true && false -> b:=123 fi;
 c:= -1; if false && false -> c:=4 fi;
 d:= 4; if true && true -> d:=-1 fi
 
-# land precates
+# land predicates
 a:= -1; if false & true -> a:=4 fi;
 b:= -1; if true & false -> b:=4 fi;
 c:= -1; if false & false -> c:=4 fi;
@@ -143,4 +144,13 @@ do (i<n)&((j=m)|(i<j)) -> A[i]:=A[i]+27;
                           i:=i+1
 [] (j<m)&((i=n)|(!(i<j))) -> B[j]:=B[j]+12;
                              j:=j+1
+od
+
+#
+i:=1;
+if i>=1 -> x:=2;
+y:=1+2
+fi;
+do x<0 -> A[x]:=x+1
+[] x>0 -> B[1]:=0
 od
