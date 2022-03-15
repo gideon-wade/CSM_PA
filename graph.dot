@@ -2,9 +2,5 @@ digraph program_graph {rankdir=LR;
 node [shape = circle]; q▷;
 node [shape = doublecircle]; q◀;
 node [shape = circle]
-q▷ -> q1 [label = "y:=1"];
-q1 -> q2 [label = "(x>0)"];
-q2 -> q3 [label = "y:=x*y"];
-q3 -> q1 [label = "x:=x-1"];
-q1 -> q◀ [label = "!((x>0))"];
+q▷ -> q◀ [label = "A[1] :=A[2]"];
 }

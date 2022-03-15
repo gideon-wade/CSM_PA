@@ -3,8 +3,8 @@ module Compiler
 open System
 
 type Node = string;;
-
-type Edge = Node * cmd * Node;; 
+  
+type Edge = Node * cmd * Node;;
 
 let mutable num = 1;;
 
@@ -46,6 +46,7 @@ let rec edgesPrint (graph : Edge list) =
         //| Cmds(c1, c2)::tail               -> startNode + " -> " + "new [label = \""+ (graphPrinter c1) + "\"];\n" + (edgesPrint "new" endNode c2);;
 
 let makeEdge (graph : Edge list)  =
+     num <- 1
      "digraph program_graph {rankdir=LR;\n" 
      + "node [shape = circle]; q▷;\n" 
      + "node [shape = doublecircle]; q◀;\n" 
@@ -63,7 +64,8 @@ let rec removeAll (q : char list) =
     match q with
         | []                    -> ""
         | c::tail when c <> '◀' -> removeQ tail
-        | c::tail when c = '◀'  -> "◀";;     
+        | c::tail when c = '◀'  -> "◀"  
+        | _                     -> "";;   
 
 let rec bubble (graph : Edge list) =
     match graph with
@@ -74,7 +76,7 @@ let rec bubble (graph : Edge list) =
                                                 if n1 <= n2 then
                                                     (q1, e1, q12)::(bubble ((q2, e2, q22)::tail))
                                                 else
-                                                    (q2, e2, q22)::(bubble ((q1, e1, q12)::tail));;                                          
+                                                    (q2, e2, q22)::(bubble ((q1, e1, q12)::tail));;
 
 let rec bubbleSort (graph : Edge list) (num : int) =
     match num with
