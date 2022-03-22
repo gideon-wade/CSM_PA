@@ -24,10 +24,10 @@ open GCLLexer
 
 let rec replace (x : float list) (idx : int) (value : float) (curIdx : int) = 
     match x with
-        | []                        -> []
-        | e::tail when idx = curIdx -> value::tail
-        | e::tail when idx = curIdx -> e::(replace tail idx value (curIdx+1));;
-
+        | []                         -> []
+        | e::tail when idx = curIdx  -> value::tail
+        | e::tail when idx <> curIdx -> e::(replace tail idx value (curIdx+1));;
+        
 let rec evalA (e : aExpr) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
     match e with
         | Num(x)              -> x
@@ -101,18 +101,21 @@ let rec findAll (node : Node) (programGraph : Edge list) =
 
 let rec evalGraph (curNode : Node ) (programGraph : Edge list) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
     match curNode with
-        | "q◀" -> (varMem, arrMem)
+        | "q◀" -> (curNode, "Terminated", varMem, arrMem)
         | _    -> let all = findAll curNode programGraph
                   let valid = findValid all varMem arrMem
                   if List.length valid = 0 then
-                    (varMem, arrMem)
+                    (curNode, "Stuck(No valid node)", varMem, arrMem)
                   else
                     let r = System.Random()
                     let i = r.Next(0, List.length valid - 1)
                     let (_, edge, endNode) = valid.[i]
                     //printfn "EDGE: %A" edge
                     let (varMem, arrMem) = (evalCmd edge varMem arrMem)
-                    evalGraph endNode programGraph varMem arrMem ;;
+                    try
+                        evalGraph endNode programGraph varMem arrMem
+                    with e ->
+                        (curNode, "Stuck(Crash)", varMem, arrMem);;
         
 // We He
 let parse input =
@@ -148,13 +151,12 @@ let rec compute n =
         File.WriteAllText("graph.dot", (makeEdge (bubbleDown (bubbleSort graph (List.length graph)))))
         //let varMem = Map.empty.Add("x",4.0)
         //let arrMem = Map.empty.Add("X",[4.;4.;4.;4.0])
-        let varMem = Map [("n",10.)]
+        let varMem = Map [("n",11.)]
         let arrMem = Map [("A",[6.;3.;2.;-4.;3.;7.;99.;69.;-69.;55555.])]
-        
-        printfn "Out %A" (evalGraph "q▷" graph varMem arrMem)
+        let (node, status, newVarMem, newArrMem) = (evalGraph "q▷" graph varMem arrMem)
+        printfn "Status: %s\nNode: %s\nMemory:\n%A\n%A" status node newVarMem newArrMem//(prettyPrintVar newVarMem) (prettyPrintArr newArrMem) 
         compute n
         with e -> compute (n-1)
 
 // Start interacting with the user
 compute 20;;
-    
