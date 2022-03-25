@@ -151,7 +151,7 @@ let rec compute n =
         File.WriteAllText("graph.dot", (makeEdge (bubbleDown (bubbleSort graph (List.length graph)))))
         //let varMem = Map.empty.Add("x",4.0)
         //let arrMem = Map.empty.Add("X",[4.;4.;4.;4.0])
-        let varMem = Map [("n",11.)]
+        let varMem = Map [("n",10.)]
         let arrMem = Map [("A",[6.;3.;2.;-4.;3.;7.;99.;69.;-69.;55555.])]
         let (node, status, newVarMem, newArrMem) = (evalGraph "q▷" graph varMem arrMem)
         printfn "Status: %s\nNode: %s\nMemory:\n%A\n%A" status node newVarMem newArrMem//(prettyPrintVar newVarMem) (prettyPrintArr newArrMem) 
