@@ -42,8 +42,6 @@ let rec edgesPrint (graph : Edge list) =
    match graph with
         | []                    -> ""
         | (q0, edge, q1)::tail  -> q0 + " -> " + q1 + " [label = \"" + (graphPrinter edge)+"\"];\n" + (edgesPrint tail)
-        //| Edge(q0, Skip, q2)::tail         -> q0 + " -> " + q2 + " [label = skip];"
-        //| Cmds(c1, c2)::tail               -> startNode + " -> " + "new [label = \""+ (graphPrinter c1) + "\"];\n" + (edgesPrint "new" endNode c2);;
 
 let makeEdge (graph : Edge list)  =
      num <- 1

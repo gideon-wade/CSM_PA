@@ -10,6 +10,10 @@ open graphPrinter
 
 #load "Compiler.fsx"
 open Compiler
+#load "Interpreter.fsx"
+open Interpreter
+#load "Verificator.fsx"
+open Verificator
 
 //#load "printer.fsx"
 //open printer
@@ -22,103 +26,71 @@ open GCLParser
 #load "GCLLexer.fs"
 open GCLLexer
 
-let rec replace (x : float list) (idx : int) (value : float) (curIdx : int) = 
-    match x with
-        | []                         -> []
-        | e::tail when idx = curIdx  -> value::tail
-        | e::tail when idx <> curIdx -> e::(replace tail idx value (curIdx+1));;
-        
-let rec evalA (e : aExpr) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
-    match e with
-        | Num(x)              -> x
-        | ArrayVariable(x, a) -> (arrMem.[x]).[(int) (evalA a varMem arrMem)]
-        | Variable(x)         -> varMem.[x]
-        | TimesExpr(x,y)      -> (evalA x varMem arrMem) * (evalA y varMem arrMem)
-        | DivExpr(x,y)        -> (evalA x varMem arrMem) / (evalA y varMem arrMem)
-        | PlusExpr(x,y)       -> (evalA x varMem arrMem) + (evalA y varMem arrMem)
-        | MinusExpr(x,y)      -> (evalA x varMem arrMem) - (evalA y varMem arrMem)
-        | PowExpr(x,y)        -> (evalA x varMem arrMem) ** (evalA y varMem arrMem)
-        | UPlusExpr(x)        -> (evalA x varMem arrMem)
-        | UMinusExpr(x)       -> - (evalA x varMem arrMem);;
+let rec signAnalyser g = 
+    match g with
+        | []      -> []
+        | e::tail -> e::(signAnalyser tail);;
 
-let rec evalB (bexpr : bExpr) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
-    match bexpr with
-        | True              -> true
-        | False             -> false
-        | LOr(b1, b2)       -> let b1 = (evalB b1 varMem arrMem)
-                               let b2 = (evalB b2 varMem arrMem)
-                               b1 || b2
-        | LAnd(b1, b2)      -> let b1 = (evalB b1 varMem arrMem)
-                               let b2 = (evalB b2 varMem arrMem)
-                               b1 && b2
-        | Or(b1, b2)        -> (evalB b1 varMem arrMem) || (evalB b2 varMem arrMem)
-        | And(b1, b2)       -> (evalB b1 varMem arrMem) && (evalB b2 varMem arrMem)
-        | Not(b)            -> not (evalB b varMem arrMem)
-        | Equals(a1, a2)    -> (evalA a1 varMem arrMem) =  (evalA a2 varMem arrMem)
-        | NotEquals(a1, a2) -> (evalA a1 varMem arrMem) <> (evalA a2 varMem arrMem)
-        | GrtThan(a1, a2)   -> (evalA a1 varMem arrMem) >  (evalA a2 varMem arrMem)
-        | GrtEq(a1, a2)     -> (evalA a1 varMem arrMem) >= (evalA a2 varMem arrMem)
-        | LeThan(a1, a2)    -> (evalA a1 varMem arrMem) <  (evalA a2 varMem arrMem)
-        | LeEq(a1, a2)      -> (evalA a1 varMem arrMem) <= (evalA a2 varMem arrMem);;  
+let sign n =
+    if n > 0.0 then
+        "+"
+    else if n = 0.0 then
+        "0"
+    else
+        "-";;
 
-let rec evalCmd (cmd:cmd) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
-    match cmd with
-        | Skip                   -> (varMem, arrMem)
-        | Assign(x, a)           -> (varMem.Add(x, (evalA a varMem arrMem)), arrMem)
-        | AssignArray(x, a1, a2) -> (varMem, arrMem.Add(x, replace (arrMem.[x]) ((int) (evalA a1 varMem arrMem)) (evalA a2 varMem arrMem) 0))
-        | Cmds(c1, c2)           -> let (varMem, arrMem) = (evalCmd c1 varMem arrMem)
-                                    evalCmd c2 varMem arrMem
-        | _                      -> (varMem, arrMem)
-        //| If(gCmd)               -> evalGCmd gCmd varMem arrMem
-        //| Do(gCmd)               -> evalGCmd gCmd varMem arrMem;;
-and evalGCmd (gCmd:gCmd) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
-    match gCmd with
-        | Statement(bExpr, cmd) -> if (evalB bExpr varMem arrMem) then
-                                        (evalCmd cmd varMem arrMem)
-                                   else
-                                        (varMem, arrMem)
-        | GCmds(gc1, gc2) -> match gc1 with
-                                | Statement(bExpr, c1) -> 
-                                        if (evalB bExpr varMem arrMem) then
-                                            evalCmd c1 varMem arrMem
-                                            //let newMem = evalCmd c1 varMem arrMem
-                                            //evalCmd c1 newMem
-                                        else
-                                            (evalGCmd gc2 varMem arrMem)
-                                | GCmds(gc1, gc2) -> failwith ("Wrong parse");;
+let rec varOperation (var : string) = 
+    match var with 
+        | 
 
-let rec findValid (all : Edge list) (varMem :  Map<string, float>) (arrMem : Map<string, float list>) = 
-    match all with
-        | []                                                            -> []
-        | (q1, BoolCmd(b), q2)::tail when evalB b varMem arrMem = false -> findValid tail varMem arrMem
-        | e::tail                                                       -> e::(findValid tail varMem arrMem);;
+let plusOperation (n1 : float) (n2 : float) = 
+    match (sign n1, sign n2) with
+        | (s, "0")   -> Set.ofList [s]
+        | ("0", s)   -> Set.ofList [s]
+        | ("-", "-") -> Set.ofList ["-"]
+        | ("+", "-") -> Set.ofList ["-"; "0"; "+"]
+        | ("-", "+") -> Set.ofList ["-"; "0"; "+"]
+        | ("+", "+") -> Set.ofList ["+"];;
 
-let rec findAll (node : Node) (programGraph : Edge list) = 
-    match programGraph with
-        | []                                -> []
-        | (q1, e, q2)::tail when q1 <> node -> findAll node tail
-        | (q1, e, q2)::tail when q1 = node  -> (q1, e, q2)::(findAll node tail)
+let minusOperation (n1 : float) (n2 : float) = 
+    match (sign n1, sign n2) with
+        | (s, "0")   -> Set.ofList [s]
+        | ("+", "-") -> Set.ofList ["+"]
+        | ("0", "-") -> Set.ofList ["+"]
+        | ("0", "+") -> Set.ofList ["-"]
+        | ("-", "+") -> Set.ofList ["-"]
+        | ("+", "+") -> Set.ofList ["-";"0";"+"]
+        | ("-", "-") -> Set.ofList ["-";"0";"+"];;
 
-let rec evalGraph (curNode : Node ) (programGraph : Edge list) (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
-    match curNode with
-        | "q◀" -> (curNode, "Terminated", varMem, arrMem)
-        | _    -> let all = findAll curNode programGraph
-                  let valid = findValid all varMem arrMem
-                  if List.length valid = 0 then
-                    (curNode, "Stuck(No valid node)", varMem, arrMem)
-                  else
-                    let r = System.Random()
-                    let i = r.Next(0, List.length valid - 1)
-                    let (_, edge, endNode) = valid.[i]
-                    //printfn "EDGE: %A" edge
-                    let (varMem, arrMem) = (evalCmd edge varMem arrMem)
-                    try
-                        evalGraph endNode programGraph varMem arrMem
-                    with e ->
-                        (curNode, "Stuck(Crash)", varMem, arrMem);;
-        
+let timesOperation (n1 : float) (n2 : float) = 
+    match (sign n1, sign  n2) with
+        | (_, "0")   -> Set.ofList ["0"]
+        | ("0", _)   -> Set.ofList ["0"]
+        | ("+", "+") -> Set.ofList ["+"]
+        | ("-", "+") -> Set.ofList ["-"]
+        | ("+", "-") -> Set.ofList ["-"]
+        | ("-", "-") -> Set.ofList ["+"];;
+
+let divOperation (n1 : float) (n2 : float) = 
+    match (sign n1, sign n2) with
+        | ("-", "-") -> Set.ofList ["+"]
+        | ("+", "-") -> Set.ofList ["-"]
+        | ("0", _)   -> Set.ofList ["0"]
+        | (_, "0") -> failwith "Division by 0"
+        | ("-", "+") -> Set.ofList ["-"]
+        | ("+", "+") -> Set.ofList ["+"];;
+
+let rec evalOperator op (varMem : Map<string, float>) (arrMem : Map<string, float list>) =
+    match op with
+        | Num(n)              -> Set.ofList [sign n]
+        | Variable(var)       -> Set.ofList [varOperation var]
+        | PlusExpr(a1, a2)    -> plusOperation  (evalA a1 varMem arrMem) (evalA a2 varMem arrMem)
+        | MinusExpr(a1, a2)   -> minusOperation (evalA a1 varMem arrMem) (evalA a2 varMem arrMem)
+        | TimesExpr(a1, a2)   -> timesOperation (evalA a1 varMem arrMem) (evalA a2 varMem arrMem)
+        | DivExpr(a1 ,a2)     -> divOperation   (evalA a1 varMem arrMem) (evalA a2 varMem arrMem)
+        | ArrayVariable(s, a) -> arrayOperation 
 // We He
-let parse input =
+let parse (input:string) : cmd =   
     // translate string into a buffer of characters
     let lexbuf = LexBuffer<char>.FromString input
     // translate the buffer into a stream of tokens and parse them
@@ -127,7 +99,7 @@ let parse input =
     res
 
 // We implement here the function that interacts with the user
-let rec compute n =
+let rec compute (n:int) =
     if n = 0 then
         printfn "Bye bye ♿"
     else
@@ -142,21 +114,119 @@ let rec compute n =
         let e = parse (prog)
         
         //printfn "AST ☢ SHEEEEEEEEEEEEEEEEEEEEESH: %A" (e)
-        // and print the result of evaluating it 
-        //printfn "Result: %A" (evalCmd e Map.empty)
         //printfn "Result: %A" (printer e)
         let graph = (edges "q▷" "q◀" e)
+        
+        //Verificator:
+        //num <- 1
+        //let nodes = (["q▷"]@(coverNodes "q▷" "q◀" e)@["q◀"])
+        //printfn "Cover nodes %A" nodes
+        //printfn "Enter conditions:"
+        //let conditions = Map.ofList (getConditions nodes)
+        //printfn "SPF %A" (SPF graph nodes nodes)
+        //printfn "SPF\n%s" (printSPFS (SPF graph nodes nodes) conditions)
+        
+        //Sign analyser
+
+        
         //printfn "Result:\n%A" e
-        //printfn "Graph:\n\n"
+        printfn "Graph:"
         File.WriteAllText("graph.dot", (makeEdge (bubbleDown (bubbleSort graph (List.length graph)))))
-        //let varMem = Map.empty.Add("x",4.0)
-        //let arrMem = Map.empty.Add("X",[4.;4.;4.;4.0])
+        //printfn "<<<%s>>>" (makeEdge (bubbleDown (bubbleSort graph (List.length graph))))
         let varMem = Map [("n",10.)]
         let arrMem = Map [("A",[6.;3.;2.;-4.;3.;7.;99.;69.;-69.;55555.])]
         let (node, status, newVarMem, newArrMem) = (evalGraph "q▷" graph varMem arrMem)
-        printfn "Status: %s\nNode: %s\nMemory:\n%A\n%A" status node newVarMem newArrMem//(prettyPrintVar newVarMem) (prettyPrintArr newArrMem) 
+        //printfn "Status: %s\nNode: %s\nMemory:\n%A\n%A" status node newVarMem newArrMem//(prettyPrintVar newVarMem) (prettyPrintArr newArrMem) 
         compute n
-        with e -> compute (n-1)
+        with e ->
+            printfn "Error: %A" e
+            compute (n-1);;
 
 // Start interacting with the user
 compute 20;;
+//               ..,,:::;;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;::1ffLLLLLLLLLLL
+//              ..,,::;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;::::iiiiiiii;ii11ttttttttt
+//           .,,,:;;;;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii:. ,:;iiiiiiiiiiiii;;;;;;;;;;
+//         .,..,:;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii:. ,t1iiiiiiiiiiiiiiiiiiiiiiiii
+//            :iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;,  ;C00L1iiiiiiiiiiiiiiiiiiiiiii
+//           :iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;,  :tG0000Gfiiiiiiiiiiiiiiiiiiiiii
+// ::::::,,..;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii:. ,tG00000000Liiiiiiiiiiiiiiiiiiiii
+// ;;;;iiii::iiiiiiiiiiiiiiiiiiiii;iiiiiiiiii;.  ;C00000000000C1iiiiiiiiiiiiiiiiiii
+// 11i;::;i;;iiiiiiiiiiiiiiii;;;iiii;iiiiii;,  :f0Ct11fC0000000G1;iiiiiiii;;;;i:;ii
+// 11111i;:;iiiiiiiiiiiiiiiiiiiiiiii:;iii;,  ,tG00i,. .,iL000000L,:iii;;;;itLCf:ii;
+// 1111111i:;iiiiiiiiiiiiiiiiiiii;;iii;:,..,:t0000t,    .:L0000C;,,;;;ifCG88@@L:;;:
+// 11111111i;iiiiiiiiiiiiiiiiiiiiiii;;;:::;ii;f000Gt:.. .:f000L;,::;tG8@@@@88Gt:;;i
+// 11111111i;iiiiiiiiiiiiiiiiiiiiiii,.:,::;;ii;f0000Cft1tLG0Gf::,,iC8@@8@80CC0C;iii
+// 11111111;;iiiiiiiiiiiiiiiiiiii;,.  :;;:;:;ii;1C00000000GLi::,iC8@88@80CG8@@81;;i
+// 1111iii;;iiiiiiiiiiiiiiiiiii;,  ..:iiii;:;iii;itCGGGCLti;:::f8@888@8CC8@@@@@8L1i
+// 1111;;;;;;;;iiiiiiiiiiiiii;.  .iLCt;;ii;;iiiiii;;i;:::,:::;L8@888@0L0@@@@@@@@8Gf
+// 1111111i;;:;iiiiiiiiiiii;,  .1C0000Gt;;iiiiiiiiiii;:;;;;;;G@8888@GC8@@@@@@@8GG08
+// 111111i;;;;:iiiiiiiiiii:.  :LGLLLCG00C1;;iiiiiiiiiiiiii;iG@888@@CC@@@@@@@0CG8@@@
+// i1111111111;;iiiiiiiii:  .1GL;,..,iL000Li;iiiiiiiiiiii;i0@888@@0C@@@@@@8CC8@@@@@
+// .,;i11111111;;iiiiiii:  ;L001,    .:f000Gi:iiiiiiiii;;;C@8888@@@@@@@@8GC8@@@@@@@
+//    .,:;iiiii;:;iiiii:  iGG00L:.    .;G000L,;iiii;::::::C8@@8@@@@@@@@0C0@@@@@@@@@
+//         ..... .:iiii: .tGGG00L1;,..,iGGGGf.:;iii;,..,. .:f88@@@@@@@CC8@@@@@@@@@@
+//                 :iii;.:;tGGGG00GCLffCGGGL:,:iiii;..f0i    L@@@@@@@@8@@@@@88@@@@@
+//                  ,:ii;ii;1LGGGGG00GGGGGf;::;ii;;, ;8t.    f@@@@@@@@@@@@@@@8@@@@@
+//                    ,;iiiii;1LGGGGGGGGLi,:;:;i1tfi .:      C@@@@@@@@@8GLC8@@@@@@@
+//                     .:iiiii;i1fLCCCCt:,:;;:1C08@0i:::::;;i0@@@@@@@0LiiG@@@@@@@@@
+//                       ,;iiiiii;iii;:,:;;;;t8@@8@@@88888@@@@@8088G1::f8@@@@@@@@@@
+//                        .:iiiiiiii;;;;iii;f8@@@@@@@@@@@@@@@@@@8Gi,,t08G0@@@@@@@@@
+//                          ,;iiiiiiiiiiii;i8@80GG@@@@@@@@@@@@@@8t:1G80G88888@@@@@@
+//                           .:iiiiiiiiiii;180CC0@@@@@@@@@@@@@@@CL08008@@888@@@@@@@
+//                             :iiiiiiiiii;;CG88@@@@@8GG0@@@@@@@@@@@@@888@@@@@@@@@@
+//                             ,iiiiiiii;:::0@@8@@8GGG0@@@@@@888@@@@@@@@@@@@@@@@@@@
+
+
+//                                                            ,1,
+//                               ......                     .ifL1
+//                            .;1ttttLLf1,                 ;fffff,
+//                           :LCLfttfLLLLL:              ,tffffffi
+//                          ,CCCLf11ff1tff;            ,1Lffffffff.
+//                          iLttt11ifLLLfft.           :iitffffffLi
+//                          ;t1111ii1fffff1               ffffft;i1.
+//                          ,1iiiiii1tt1it,              ifffff,
+//                           ;1i;;;;i1tff:              .fffff1
+//                           ,t1ii;:::;i;               ifffff,
+//                          .,;11iii;:                 .fffff1
+//                     ..,,.,,.,iftitGi...             ifffff,
+//                 .,,,::::,,,,..;LLLGt::::,,,.       .fffff1
+//                 ;,,,,,,,,,,,,,.,;tfi,::,,::::,     ;fffff,
+//                 ::,,,,,,,,..,:,,.:ft,::,,:,,::.   .fffff1
+//                 ,i:,,,,,,,,..,,,,,,;,:::,:,,,::   ;fffff,
+//                 .1:,,,,,,,,..,,,:,,,::,,,:,,,,:, .fffff1
+//                  ;;:,,,,,:, ..,,,::,,,:,,:,,,,::.,1tfff:
+//                  ,1;:,,,,;f:.,,,,,,:,..,,:,..,,::,  ..,
+//                   ;i::,,,,,:,,:,,:,:::,,,;1:,.,,,:,
+//                   .;;;:,,,,,,,,,::::::::::LGC;,,,,:.
+//                    .;;:,,.,,,,,,,,,,,,,,:::;;:,,,,,:
+//                     ,:::,.....,,,,,,,,,,,:,,,,,,,,,:.
+//                     ....,....,,,,,,.....,,,,,,,,,,,,.
+//                     ,,..     .,::;:........,,,,,...
+//                     :,,......      ............
+//                     :,...........   ....:,...,.
+//                     ,,............. ...,1;,,,,.
+//                                         ..
+//             
+//                 .
+//                .;;:,.
+//                 ;iiii;:,.                                   .,:;.
+//                 :i;iiiiii:,                            .,:;;iiii.
+//                  ;iiiiiiiii;:.                    .,:;;iiiiii;i:
+//                   :iiiiiiiiiii:......,,,,,.....,:;iiiiiiiiiiii;
+//                    ,iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii:
+//                     .:iii;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;,
+//                       .:;;iiiiiiiiiiiiiiiiiiiiiiiiiii;;ii;,
+//                        :iiii;;iiiiiiiiiiiiiii;;iiiiiii;:.
+//                       ,iiii;1f:;iiiiiiiiiiii;if;:iiiiiii.
+//                      .iiiii:iL..iiiiiiiiiiii;:f: iiiiiiii.
+//                      ;iiiiii:.,;iiii;iiiiiiii:..:iiiiiiii:
+//                     .i;;;iiiiiiiiii;,,;iiiiiiiiiiii;;iiiii.
+//                     ::,,,,:iiiiiiiiiiiiiiiiiiiiii:,,,,:;ii:
+//                     ;,,,,,:iiiiiiii;;;;;;;iiiiii;,,,,,,;iii.
+//                     ;i;;;;iiiiiiii;:;;;;;:iiiiiii;::::;iiii:
+//                     ,iiiiiiiiiiiiii;;;;;;:iiiiiiiiiiiiiiiiii.
+//                      .iiiiiiiiiiiiii;;;;;iiiiiiiiiiiiiiiiiii:
+//                       .;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;
+//                        ;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.
+//                       .;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;,

@@ -4,7 +4,7 @@ let rec graphPrinter (cmd:cmd) =
     match cmd with
         | Skip                   -> "Skip"
         | Assign(x, a)           -> x + ":=" + (graphPrinterA a)
-        | AssignArray(x, a1, a2) -> x+"["+(graphPrinterA a1)+"] :="+(graphPrinterA a2)
+        | AssignArray(x, a1, a2) -> x+"["+(graphPrinterA a1)+"]:="+(graphPrinterA a2)
         | Cmds(c1, c2)           -> failwith "Should not happen"
         | If(gCmd)               -> "if " + (graphPrinterGc gCmd) + " fi"
         | Do(gCmd)               -> "do " + (graphPrinterGc gCmd) + " od"
@@ -25,17 +25,17 @@ and graphPrinterB (bexpr : bExpr) =
     match bexpr with
         | True              -> "True"
         | False             -> "False"
-        | LOr(b1, b2)       -> "(" + (graphPrinterB b1) + "|" + (graphPrinterB b2) + ")"
-        | LAnd(b1, b2)      -> "(" + (graphPrinterB b1) + "&" + (graphPrinterB b2) + ")"
-        | Or(b1, b2)        -> "(" + (graphPrinterB b1) + "||" + (graphPrinterB b2) + ")"
-        | And(b1, b2)       -> "(" + (graphPrinterB b1) + "&&" + (graphPrinterB b2) + ")"
+        | LOr(b1, b2)       -> (graphPrinterB b1) + "|" + (graphPrinterB b2)
+        | LAnd(b1, b2)      -> (graphPrinterB b1) + "&" + (graphPrinterB b2)
+        | Or(b1, b2)        -> (graphPrinterB b1) + "||" + (graphPrinterB b2)
+        | And(b1, b2)       -> (graphPrinterB b1) + "&&" + (graphPrinterB b2)
         | Not(b)            -> "!(" + (graphPrinterB b) + ")"
-        | Equals(a1, a2)    -> "(" + (graphPrinterA a1) + "=" + (graphPrinterA a2) + ")"
-        | NotEquals(a1, a2) -> "(" + (graphPrinterA a1) + "!=" + (graphPrinterA a2) + ")"
-        | GrtThan(a1, a2)   -> "(" + (graphPrinterA a1) + ">" + (graphPrinterA a2) + ")"
-        | GrtEq(a1, a2)     -> "(" + (graphPrinterA a1) + ">=" + (graphPrinterA a2) + ")"
-        | LeThan(a1, a2)    -> "(" + (graphPrinterA a1) + "<" + (graphPrinterA a2) + ")"
-        | LeEq(a1, a2)      -> "(" + (graphPrinterA a1) + "<=" + (graphPrinterA a2) + ")"
+        | Equals(a1, a2)    -> (graphPrinterA a1) + "=" + (graphPrinterA a2)
+        | NotEquals(a1, a2) -> (graphPrinterA a1) + "!=" + (graphPrinterA a2)
+        | GrtThan(a1, a2)   -> (graphPrinterA a1) + ">" + (graphPrinterA a2)
+        | GrtEq(a1, a2)     -> (graphPrinterA a1) + ">=" + (graphPrinterA a2)
+        | LeThan(a1, a2)    -> (graphPrinterA a1) + "<" + (graphPrinterA a2)
+        | LeEq(a1, a2)      -> (graphPrinterA a1) + "<=" + (graphPrinterA a2)
 and graphPrinterGc (gc : gCmd) =
     match gc with
         | Statement(bExpr, cmd) -> (graphPrinterB bExpr) + "->" + (graphPrinter cmd)
