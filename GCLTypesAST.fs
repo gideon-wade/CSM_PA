@@ -5,7 +5,7 @@ module GCLTypesAST
 
 type aExpr =
   | Num of float
-  | ArrayVariable of string * aExpr
+  | ArrayVariable of (string * aExpr)
   | Variable of string
   | TimesExpr of (aExpr * aExpr)
   | DivExpr of (aExpr * aExpr)
